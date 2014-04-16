@@ -1,5 +1,5 @@
-Programador Senior PHP
-======================
+Programador Senior PHP. Prueba técnica
+======================================
 
 La prueba consiste en tres tareas:
 
