@@ -19,7 +19,7 @@ Valoramos:
 
 Tip: Usamos herramientas como PHP Code Sniffer y PHP Mess Detector
 
-Implementación de features nuevas
+Implementación de nuevas features
 =================================
 En el directorio 'features' se describen algunos casos de uso a implementar.
 Están escritos en formato Gherkin y son ejecutables mediante Behat.
