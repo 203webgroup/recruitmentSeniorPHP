@@ -5,9 +5,9 @@ namespace MyTaste\Legacy\Tests;
 class FunctionsTest extends \PHPUnit_Framework_TestCase
 {
     /**
-     * @dataProvider whatTheFuckDoesThisFunctionProvider
+     * @dataProvider pickMiddlePartAndDecorateWithDotsProvider
      */
-    public function testWhatTheFuckDoesThisFunction(
+    public function testPickMiddlePartAndDecorateWithDots(
         $expected,
         $text,
         $starting,
@@ -17,12 +17,12 @@ class FunctionsTest extends \PHPUnit_Framework_TestCase
     ) {
         $this->assertEquals(
             $expectedReturn,
-            whatTheFuckDoesThisFunction($text, $length, $starting, $ending)
+            pickMiddlePartAndDecorateWithDots($text, $length, $starting, $ending)
         );
         $this->assertEquals($expected, $text);
     }
 
-    public function whatTheFuckDoesThisFunctionProvider()
+    public function pickMiddlePartAndDecorateWithDotsProvider()
     {
         return [
             ['....', 'ola k ase', 'ola', 'ase', 0],

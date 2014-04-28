@@ -1,56 +1,44 @@
 <?php
 
-if (!function_exists('whatTheFuckDoesThisFunction')) {
-    function whatTheFuckDoesThisFunction(&$text, $length, $starting, $ending) {
-        $strlen = mb_strlen(trim($text));
-
-        if($strlen <= 0) {
+if (!function_exists('pickMiddlePartAndDecorateWithDots')) {
+    function pickMiddlePartAndDecorateWithDots(
+        &$text,
+        $length,
+        $fromThisPart,
+        $toThisPart
+    ) {
+        if (empty(trim($text))) {
             return false;
         }
 
-        //$length = 6;
+        $text = trim($text);
+        $textLenght = mb_strlen($text);
 
-        $startdots = $enddots = '..';
+        $start = mb_strpos($text, $fromThisPart);
+        $end = mb_strrpos($text, $toThisPart);
 
-        $start = mb_strpos($text, $starting);
-        $end = mb_strrpos($text, $ending);
-
-        if($start === false) {
-            if($strlen > $length) {
-                mb_substr($text, 0, $length).$enddots;
-            }
+        $pickedLength = ($end - $start);
+        if ($pickedLength > $length) {
+            $end = mb_strpos($text, $toThisPart);
         }
 
-        if (($end-$start) > $length) {
-            $end = mb_strpos($text, $ending);
+        $pickStartPosition = round($start-(($length-$pickedLength)/2));
+        $pickEndPosition = round($end+(($length-$pickedLength)/2));
 
-            $diff = ($end-$start);
-
-            $starter = round($start-(($length-$diff)/2));
-            $ender = round($end+(($length-$diff)/2));
-        } else {
-            $diff = ($end-$start);
-
-            $starter = round($start-(($length-$diff)/2));
-            $ender = round($end+(($length-$diff)/2));
-        }
-        if($starter < 0) {
-            $starter = 0;
-            $ender = $length;
-            $startdots = '';
+        $prefix = $sufix = '..';
+        if ($pickStartPosition < 0) {
+            $pickStartPosition = 0;
+            $pickEndPosition = $length;
+            $prefix = '';
         }
 
-        if($ender >= $strlen) {
-            $ender = $strlen;
-            $starter = $ender-$length;
-            $enddots = '';
+        if ($pickEndPosition >= $textLenght) {
+            $pickEndPosition = $textLenght;
+            $pickStartPosition = max($pickEndPosition - $length, 0);
+            $sufix = '';
         }
 
-        if($starter < 0) {
-            $starter = 0;
-        }
-
-        $text = $startdots.mb_substr($text, $starter, $length).$enddots;
+        $pickedPart = mb_substr($text, $pickStartPosition, $length);
+        $text = implode('', [$prefix, $pickedPart, $sufix]);
     }
 }
-
