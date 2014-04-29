@@ -1,165 +1,222 @@
 <?php
 
+namespace Legacy;
+
+use Legacy\Recipe\Searcher as SearchLib;
+
 class Blog
 {
     private $searchPhraseHelper;
     private $urlHelper;
     private $config;
     private $template;
-    private $site_lib;
-    private $pagination;
-    private $keyword_lib;
-    private $search_lib;
+    private $siteLib;
+    private $paginator;
+    private $searchLib;
 
-    function __construct()
-    {
-        // Helpers
-        $this->searchPhraseHelper = $this->getSearchPhraseHelper();
-        $this->urlHelper = $this->getUrlHelper();
+    public function __construct(
+        SearchPhraseHelper $searchPhraseHelper,
+        UrlHelper $urlHelper,
+        SiteLib $siteLib,
+        Config $config,
+        SearchLib $searchLib,
+        Template $template,
+        Paginator $paginator
+    ) {
+        $this->searchPhraseHelper = $searchPhraseHelper;
+        $this->urlHelper = $urlHelper;
+        $this->siteLib = $siteLib;
+        $this->config = $config;
+        $this->searchLib = $searchLib;
+        $this->template = $template;
+        $this->paginator = $paginator;
     }
 
     /**
      * Display a single blog recipes
      *
-     * @param int $site_id
+     * @param int $siteId
      * @param string $keyword Search keyword
-     * @param int $page Pagination
-     * @param string $order_by
+     * @param int $page Paginator
+     * @param string $orderBy
      * @return  void
      */
-    public function view($site_id, $keyword = '', $page = 1, $order_by = "c")
+    public function view($siteId, $keyword = '', $page = 1, $orderBy = null)
     {
-        $site = $this->site_lib->get($site_id, true);
+        $keyword = trim($this->urlHelper->deurlize($keyword));
+        $site = $this->siteLib->get($siteId, true);
 
-        if (!isset($site['site_id'])) {
-            header('HTTP/1.1 301 Moved Permanently');
-            header('Location: '. url('blogosphere'));
-            exit;
+        if (!$this->isValidSite($site)) {
+            $this->redirectPermanently('blogosphere');
         }
 
-        if (!preg_match('#^' . preg_quote($site['on_page_url'], '#') . '#', url() . ltrim($_SERVER['REQUEST_URI'], '/'))) {
-            $redirect_url = $site['on_page_url'];
-
-            if (mb_strlen($keyword) > 0) {
-                $redirect_url .= $keyword . '/';
-            }
-
-            if ($page > 1) {
-                $redirect_url .= $page . '/';
-            }
-
-            header('HTTP/1.1 301 Moved Permanently');
-            header('Location: ' . $redirect_url);
-            exit;
+        if (!$this->isCurrentSite($site)) {
+            $this->redirectToSite($site, $keyword, $page);
         }
 
-        // Replace dash with space etc
-        if (mb_strlen(trim($keyword)) > 0) {
-            if ($this->config->item('feature_new_keywords')) {
-                $searchPhrase = $this->urlHelper->deurlize($keyword);
-                $cleanSearchPhrase = $this->searchPhraseHelper->cleanPhrase($searchPhrase);
-                $extractedKeywords = $this->searchPhraseHelper->extract($cleanSearchPhrase, true);
-                $cleanKeywords = $this->searchPhraseHelper->cleanKeywords($extractedKeywords['normalized']);
+        $this->searchRecipes($siteId, $keyword, $page, $orderBy);
 
-                $cleanSearchPhrase = $this->searchPhraseHelper->insertion($cleanKeywords, true, false, null, false, true);
-            } else {
-                $keyword = $this->keyword_lib->replace_url_chars($keyword);
+        $this->setMetaData($site, $keyword);
 
-                /* Generate hash */
-                $this->keyword_lib->generate_hash($keyword);
-                $this->keyword_lib->get_hash_id();
+        $this->paginator->initialize($this->getPaginatorOptions());
 
-                $cleanKeywords = $this->keyword_lib->search_words;
-                $cleanSearchPhrase = $this->keyword_lib->search_keyword;
-            }
-        }
-
-        $is_keyword  = mb_strlen(trim($keyword)) > 0 && !is_numeric($keyword) ? true : false;
-        $uri_segment = $is_keyword ? 4 : 3;
-        $base        = explode('/', $_SERVER['REQUEST_URI']);
-
-        $paths_to_remove = count($base)-$uri_segment;
-        for ($i = 0; $i < $paths_to_remove; $i++) {
-            unset($base[count($base) - 1]);
-        }
-
-        $canonical = implode('/', $base);
-
-        $options = array(
-            'keyword'           => $cleanSearchPhrase,
-            'keyword_separated' => $cleanKeywords,
-            'page'              => $page,
-            'site_id'           => $site_id,
-        );
-
-
-        if ($order_by != "" && $order_by != "c" ){
-
-            switch ($order_by){
-
-                case "a" : $tmp = "original_title ASC";break;
-                case "b" : $tmp = "num_saved DESC";break;
-                case "d" : $tmp = "date DESC";break;
-
-            }
-
-            $options["order_by"] = $tmp;
-            unset($tmp);
-
-        }
-
-        $result = $this->search_lib->search($options);
-
-        // Set meta data
-        $this->template->set_title(mb_strlen(trim($keyword)) > 0 && $result['total_found'] > 0
-                ? sprintf(_('Page/BlogView/Meta/Title/%s_search'), $result['recipes'][0]['title'])
-                : sprintf(_('Page/BlogView/Meta/Title/%s_blog'), $site['name']));
-
-        $this->template->set_description(sprintf(_('Page/BlogView/Meta/Description/%s_blog'), $site['name']));
-        $this->template->set_query($keyword);
-
-        if ($canonical != $_SERVER['REQUEST_URI']) {
-            define('NOINDEX_FOLLOW', 1);
-            define('CANONICAL', url() . ltrim($canonical, '/'));
-        }
-
-        if ($result['found'] == 0) {
-            define('NOINDEX_FOLLOW', 1);
-        }
-
-        $config['total_rows'] = $result['total_found'];
-        $config['max_rows']   = $this->sphinx->_maxmatches;
-        $config['per_page']   = $this->config->item('normal_limit');
-
-        //if($order_by != "") $uri_segment++;
-        //$config['uri_segment'] = $uri_segment;
-
-        $config['uri_segment'] = count($this->uri->segment_array());
-
-        $this->pagination->initialize($config);
-
-        $orderByLinks = $this->uri->segment_array();
-        $orderByLinksBase = site_url().$orderByLinks[1]."/".$orderByLinks[2]."/";
-        unset($orderByLinks);
-
-        if($keyword != "")  $orderByLinksBase  .= $keyword."/";
-        $orderByLinksBase  .= "{order_by}/";
-
-
-        foreach(array(_('Option/OrderBy/Alphabetical') => "a", _('Option/OrderBy/Most_saved') => "b", _('Option/OrderBy/Best_matching') => "c", _('Option/OrderBy/InclusionDate') => "d") as $key => $value){
-            $orderByLinks[$key]["url"]      = preg_replace("%{order_by}%",$value,$orderByLinksBase);
-            $orderByLinks[$key]["selected"] = $order_by == $value ? "selected" : "";
-        }
-
-        $this->template->assign('orderby', $orderByLinks);
-        $this->template->assign('hits', $result['total_found']);
-        $this->template->assign('recipes', $result['recipes']);
-        $this->template->assign('paging', $this->pagination->create_links());
-        $this->template->assign('site', $site);
-        $this->template->assign('keyword', sanitize($keyword));
+        $this->prepareViewTemplate($site, $keyword);
 
         $this->template->display();
     }
-}
 
-/* End of file blog.php */
+    private function isValidSite($site)
+    {
+        return !empty($site['site_id']);
+    }
+
+    public function redirectPermanently($url)
+    {
+        header('HTTP/1.1 301 Moved Permanently');
+        header('Location: '. $this->urlHelper->url($url));
+    }
+
+    private function isCurrentSite($site)
+    {
+        $regex = '#^' . preg_quote($site['on_page_url'], '#') . '#';
+        return preg_match($regex, $this->urlHelper->url() . ltrim($_SERVER['REQUEST_URI'], '/'));
+    }
+
+    private function redirectToSite($site, $keyword = '', $page = 1)
+    {
+        $redirect_url = $site['on_page_url'];
+
+        if (!empty($keyword)) {
+            $redirect_url .= $keyword . '/';
+        }
+        if ($page > 1) {
+            $redirect_url .= $page . '/';
+        }
+
+        $this->redirectPermanently($redirect_url);
+    }
+
+    private function searchRecipes($siteId, $keyword, $page, $orderBy)
+    {
+        $this->searchLib->search($siteId, $keyword, $page, $orderBy);
+
+        return $this;
+    }
+
+    private function setMetaData($site, $keyword)
+    {
+        $this->template->setTitle($this->getTitle($site, $keyword));
+        $this->template->setDescription(
+            sprintf(_('Page/BlogView/Meta/Description/%s_blog'), $site['name'])
+        );
+        $this->template->setQuery($keyword);
+
+        $canonical = $this->getCanonical($keyword);
+        if ($canonical != $_SERVER['REQUEST_URI']) {
+            define('NOINDEX_FOLLOW', 1);
+            define('CANONICAL', $this->urlHelper->url() . ltrim($canonical, '/'));
+        }
+
+        if (!$this->searchLib->hasResults()) {
+            define('NOINDEX_FOLLOW', 1);
+        }
+    }
+
+    private function getTitle($site, $keyword)
+    {
+        if ($this->searchLib->isKeyword($keyword) && $this->searchLib->hasResults()) {
+            return sprintf(
+                _('Page/BlogView/Meta/Title/%s_search'),
+                $this->searchLib->getFirst()['title']
+            );
+        } else {
+            return sprintf(
+                _('Page/BlogView/Meta/Title/%s_blog'),
+                $site['name']
+            );
+        }
+    }
+
+
+    private function getPaginatorOptions()
+    {
+        return array_merge(
+            $this->searchLib->getPaginatorAsArray(),
+            ['uri_segment' => count($this->urlHelper->segmentArray())]
+        );
+    }
+
+    private function prepareViewTemplate($site, $keyword)
+    {
+        $this->template->assign('orderby', $this->getOrderByLinks($keyword));
+        $this->template->assign('hits', $this->searchLib->getFoundCount());
+        $this->template->assign('recipes', $this->searchLib->getResults());
+        $this->template->assign('paging', $this->paginator->createLinks());
+        $this->template->assign('site', $site);
+        $this->template->assign('keyword', $this->urlHelper->sanitize($keyword));
+    }
+
+    private function insertKeywordInLib($keyword)
+    {
+        if (!$this->config->item('feature_new_keywords')) {
+            return;
+        }
+
+        $searchPhrase = $this->urlHelper->deurlize($keyword);
+        $cleanedSearchPhrase = $this->searchPhraseHelper->cleanPhrase($searchPhrase);
+        $extractedKeywords = $this->searchPhraseHelper->extract($cleanedSearchPhrase, true);
+        $cleanedKeywords = $this->searchPhraseHelper->cleanKeywords($extractedKeywords['normalized']);
+
+        $cleanedSearchPhrase = $this->searchPhraseHelper->insertion(
+            $cleanedKeywords,
+            true,
+            false,
+            null,
+            false,
+            true
+        );
+    }
+
+    private function getCanonical($keyword)
+    {
+        $uriSegment = $this->searchLib->isKeyword($keyword) ? 4 : 3;
+        $base        = explode('/', $_SERVER['REQUEST_URI']);
+
+        $pathsToRemove = count($base) - $uriSegment;
+        for ($i = 0; $i < $pathsToRemove; $i++) {
+            array_pop($base);
+        }
+
+        return implode('/', $base);
+    }
+
+    private function getOrderByLinks($keyword)
+    {
+        $orderByLinks = $this->urlHelper->segmentArray();
+        $orderByLinksBase = sprintf(
+            '%s%s/%s/',
+            $this->config->item('site_url'),
+            $orderByLinks[1],
+            $orderByLinks[2]
+        );
+        unset($orderByLinks);
+
+        if ($keyword != "") {
+            $orderByLinksBase  .= $keyword."/";
+        }
+        $orderByLinksBase  .= "{order_by}/";
+
+        $data = array(
+            _('Option/OrderBy/Alphabetical') => "a",
+            _('Option/OrderBy/Most_saved') => "b",
+            _('Option/OrderBy/Best_matching') => "c",
+            _('Option/OrderBy/InclusionDate') => "d"
+        );
+        foreach ($data as $key => $value) {
+            $orderByLinks[$key]["url"]      = preg_replace("%{order_by}%", $value, $orderByLinksBase);
+            $orderByLinks[$key]["selected"] = $this->searchLib->getOrderBy() == $value ? "selected" : "";
+        }
+
+        return $orderByLinks;
+    }
+}
