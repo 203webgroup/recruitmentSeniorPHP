@@ -2,19 +2,14 @@
 
 namespace Specification\Assertion;
 
-use Specification\Assertion\Exception\SomeUpperCase as SommeUpperCaseException;
+use Specification\Assertion\Exception\AnyUpperCase as AnyUpperCaseException;
 
 class SomeUpperCase implements Assertion
 {
-    public function __construct($target)
+    public function check($target)
     {
-        $this->target = $target;
-    }
-
-    public function check()
-    {
-        if (!preg_match('#[A-Z]+#', $this->target)) {
-            throw new SommeUpperCaseException();
+        if (!preg_match('#[A-Z]+#', $target)) {
+            throw new AnyUpperCaseException();
         }
 
         return $this;

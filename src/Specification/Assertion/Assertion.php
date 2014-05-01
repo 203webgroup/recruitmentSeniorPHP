@@ -4,5 +4,5 @@ namespace Specification\Assertion;
 
 interface Assertion
 {
-    public function check();
+    public function check($target);
 }

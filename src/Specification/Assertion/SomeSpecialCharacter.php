@@ -2,19 +2,14 @@
 
 namespace Specification\Assertion;
 
-use Specification\Assertion\Exception\SomeSpecialCharacter as SomeSpecialCharacterException;
+use Specification\Assertion\Exception\AnySpecialCharacter as AnySpecialCharacterException;
 
 class SomeSpecialCharacter implements Assertion
 {
-    public function __construct($target)
+    public function check($target)
     {
-        $this->target = $target;
-    }
-
-    public function check()
-    {
-        if (!preg_match('#@#', $this->target)) {
-            throw new SomeSpecialCharacterException("Special characters missing");
+        if (!preg_match('#@#', $target)) {
+            throw new AnySpecialCharacterException();
         }
 
         return $this;

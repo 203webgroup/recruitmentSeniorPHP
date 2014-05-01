@@ -27,7 +27,7 @@ class PasswordCheckerTest extends TestCase
     }
 
     /**
-     * @expectedException Specification\Assertion\Exception\SomeSpecialCharacter
+     * @expectedException Specification\Assertion\Exception\AnySpecialCharacter
      * @expectedExceptionMessage Special characters missing
      */
     public function testInvalidPasswordBySpecialCharsMissing()
@@ -36,7 +36,7 @@ class PasswordCheckerTest extends TestCase
     }
 
     /**
-     * @expectedException Specification\Assertion\Exception\SomeUpperCase
+     * @expectedException Specification\Assertion\Exception\AnyUpperCase
      * @expectedExceptionMessage Upper case characters missing
      */
     public function testInvalidPasswordByUpperCaseCharMissing()
@@ -45,7 +45,7 @@ class PasswordCheckerTest extends TestCase
     }
 
     /**
-     * @expectedException Specification\Assertion\Exception\SomeDigit
+     * @expectedException Specification\Assertion\Exception\AnyDigit
      * @expectedExceptionMessage Digit characters missing
      */
     public function testInvalidPasswordByDigitCharMissing()

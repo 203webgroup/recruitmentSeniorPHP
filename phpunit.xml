@@ -7,7 +7,7 @@
          convertNoticesToExceptions="true"
          convertWarningsToExceptions="true"
          processIsolation="false"
-         stopOnFailure="false"
+         stopOnFailure="true"
          syntaxCheck="false"
          bootstrap="vendor/autoload.php"
         >
@@ -19,7 +19,7 @@
 
     <testsuites>
         <testsuite name="All tests">
-            <directory>./src/*/Tests/</directory>
+            <directory>./src/Tests/</directory>
         </testsuite>
         <testsuite name="Tnt Test Suite">
             <directory>./src/Tnt/Tests/</directory>
@@ -33,6 +33,7 @@
         <whitelist>
             <directory>./src</directory>
             <exclude>
+                <directory>./src/Tests</directory>
                 <directory>./src/*/Tests</directory>
             </exclude>
         </whitelist>

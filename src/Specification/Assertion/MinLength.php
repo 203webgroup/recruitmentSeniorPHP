@@ -4,17 +4,17 @@ namespace Specification\Assertion;
 
 use Specification\Assertion\Exception\MinLength as MinLengthException;
 
-class MinLength
+class MinLength implements Assertion
 {
-    public function __construct($target, $minLength)
+    public function __construct($minLength)
     {
-        $this->targetLength = mb_strlen(trim($target));
         $this->minLength = $minLength;
     }
 
-    public function check()
+    public function check($target)
     {
-        if ($this->targetLength < $this->minLength) {
+        $targetLength = mb_strlen(trim($target));
+        if ($targetLength < $this->minLength) {
             throw new MinLengthException();
         }
 

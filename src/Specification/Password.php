@@ -11,6 +11,6 @@ class Password extends Specification
             ->assert('SomeUpperCase', $password)
             ->assert('SomeDigit', $password);
 
-        return $this;
+        return true;
     }
 }

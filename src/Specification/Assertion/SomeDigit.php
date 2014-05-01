@@ -2,19 +2,14 @@
 
 namespace Specification\Assertion;
 
-use Specification\Assertion\Exception\SomeDigit as SomeDigitException;
+use Specification\Assertion\Exception\AnyDigit as AnyDigitException;
 
-class SomeDigit
+class SomeDigit implements Assertion
 {
-    public function __construct($target)
+    public function check($target)
     {
-        $this->target = $target;
-    }
-
-    public function check()
-    {
-        if (!preg_match('#\d+#', $this->target)) {
-            throw new SomeDigitException();
+        if (!preg_match('#\d+#', $target)) {
+            throw new AnyDigitException();
         }
 
         return $this;

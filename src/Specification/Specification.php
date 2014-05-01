@@ -4,13 +4,17 @@ namespace Specification;
 
 abstract class Specification
 {
-    protected function assert($assertionName, $params)
-    {
-        $assertionName = 'Specification\\Assertion\\' . $assertionName;
-        $rf = new \ReflectionClass($assertionName);
+    protected $assertionsNamespace = 'Specification\\Assertion\\';
 
-        $assertion = $rf->newInstanceArgs((array) $params);
-        $assertion->check();
+    protected function assert($assertionClassName, $params)
+    {
+        $params = (array) $params;
+        $target = array_shift($params);
+        $constructorParam = array_shift($params);
+        $assertionClassName = $this->assertionsNamespace . $assertionClassName;
+
+        $assertion = new $assertionClassName($constructorParam);
+        $assertion->check($target);
 
         return $this;
     }

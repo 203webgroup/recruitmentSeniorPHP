@@ -13,7 +13,6 @@ class Searcher implements \Legacy\Search\Searcher
     const ORDER_BY_DATE = 'd';
 
     private $page;
-    private $orderByKey;
     private $orderBySql;
     private $siteId;
     private $keyword;
