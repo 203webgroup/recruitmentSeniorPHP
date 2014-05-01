@@ -58,4 +58,30 @@ class FeatureContext extends BehatContext
             $serviceErrorMsg
         );
     }
+
+    /**
+     * @Given /^a minimal length for username of (\d+) characters$/
+     */
+    public function aMinimalLengthForUsernameOfCharacters($usernameMinLength)
+    {
+        $this->usernameMinLength = $usernameMinLength;
+    }
+
+    /**
+     * @Given /^a username \'([^\']*)\'$/
+     */
+    public function aUsername($username)
+    {
+        $this->username = $username;
+    }
+
+    /**
+     * @When /^I check if it satisfies our Username Specification$/
+     */
+    public function iCheckIfItSatisfiesOurUsernameSpecification()
+    {
+        $checkerUrl = sprintf('check_username/%s/%d', $this->username, $this->usernameMinLength);
+        $this->request = $this->client->get($checkerUrl);
+        $this->response = $this->request->send();
+    }
 }

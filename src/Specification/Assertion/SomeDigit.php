@@ -4,7 +4,7 @@ namespace Specification\Assertion;
 
 use Specification\Assertion\Exception\AnyDigit as AnyDigitException;
 
-class SomeDigit
+class SomeDigit implements Assertion
 {
     public function check($target)
     {

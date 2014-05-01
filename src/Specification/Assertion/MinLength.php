@@ -4,7 +4,7 @@ namespace Specification\Assertion;
 
 use Specification\Assertion\Exception\MinLength as MinLengthException;
 
-class MinLength
+class MinLength implements Assertion
 {
     public function __construct($minLength)
     {

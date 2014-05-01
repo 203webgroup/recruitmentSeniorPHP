@@ -9,7 +9,7 @@ class SomeSpecialCharacter implements Assertion
     public function check($target)
     {
         if (!preg_match('#@#', $target)) {
-            throw new AnySpecialCharacterException("Special characters missing");
+            throw new AnySpecialCharacterException();
         }
 
         return $this;
