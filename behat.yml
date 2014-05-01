@@ -1,0 +1,5 @@
+default:
+  context:
+    parameters:
+      bootstrap: vendor/autoload.php
+      base_url: http://localhost/

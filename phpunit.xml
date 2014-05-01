@@ -18,6 +18,9 @@
     </php>
 
     <testsuites>
+        <testsuite name="All tests">
+            <directory>./src/*/Tests/</directory>
+        </testsuite>
         <testsuite name="Tnt Test Suite">
             <directory>./src/Tnt/Tests/</directory>
         </testsuite>
