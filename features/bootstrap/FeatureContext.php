@@ -1,44 +1,61 @@
 <?php
 
-use Behat\Behat\Context\ClosuredContextInterface,
-    Behat\Behat\Context\TranslatedContextInterface,
-    Behat\Behat\Context\BehatContext,
-    Behat\Behat\Exception\PendingException;
-use Behat\Gherkin\Node\PyStringNode,
-    Behat\Gherkin\Node\TableNode;
+use Behat\Behat\Context\ClosuredContextInterface;
+use Behat\Behat\Context\TranslatedContextInterface;
+use Behat\Behat\Context\BehatContext;
+use Behat\Behat\Exception\PendingException;
+use Behat\Gherkin\Node\PyStringNode;
+use Behat\Gherkin\Node\TableNode;
 
-//
-// Require 3rd-party libraries here:
-//
-// require_once 'PHPUnit/Autoload.php';
-// require_once 'PHPUnit/Framework/Assert/Functions.php';
-//
+use Guzzle\Http\Client;
 
-/**
- * Features context.
- */
+require_once __DIR__ . '/../../vendor/phpunit/phpunit/src/Framework/Assert/Functions.php';
+
 class FeatureContext extends BehatContext
 {
-    /**
-     * Initializes context.
-     * Every scenario gets it's own context object.
-     *
-     * @param array $parameters context parameters (set them up through behat.yml)
-     */
-    public function __construct(array $parameters)
+    private $assertSession;
+
+    public function __construct($config)
     {
-        // Initialize your context here
+        $this->client = new Client($config['base_url']);
     }
 
-//
-// Place your definition and hook methods here:
-//
-//    /**
-//     * @Given /^I have done something with "([^"]*)"$/
-//     */
-//    public function iHaveDoneSomethingWith($argument)
-//    {
-//        doSomethingWith($argument);
-//    }
-//
+    /**
+     * @Given /^a minimal length for password of (\d+) characters$/
+     */
+    public function aMinimalLengthForPasswordOfCharacters($passwordMinLength)
+    {
+        $this->passwordMinLength = $passwordMinLength;
+    }
+
+    /**
+     * @Given /^a password \'([^\']*)\'$/
+     */
+    public function aPassword($password)
+    {
+        $this->password = $password;
+    }
+
+    /**
+     * @When /^I check if it satisfies our Password Specification$/
+     */
+    public function iCheckIfItSatisfiesOurPasswordSpecification()
+    {
+        $checkerUrl = sprintf('check_password/%s/%d', $this->password, $this->passwordMinLength);
+        $this->request = $this->client->get($checkerUrl);
+        $this->response = $this->request->send();
+    }
+
+    /**
+     * @Then /^I should get a \'(Error: [^\']*)\' message$/
+     */
+    public function iShouldGetAErrorMessage($message)
+    {
+        $response = $this->response->json();
+        $serviceErrorMsg = !empty($response['error_msg']) ? $response['error_msg'] : null;
+        assertEquals(
+            $message,
+            $serviceErrorMsg
+        );
+    }
 }

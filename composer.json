@@ -18,9 +18,13 @@
         "phpspec/phpspec": "2.*@dev",
         "hafriedlander/phockito": "1.*@dev",
         "behat/behat": "2.4.*@stable",
+        "guzzle/guzzle": "3.0.*",
         "phpmd/phpmd": "2.0.0.*@dev",
         "sebastian/phpcpd": "2.0.*@dev",
         "instaclick/php-code-sniffer": "dev-patch-3"
+    },
+    "require": {
+        "silex/silex": "~1.2"
     },
     "autoload": {
         "psr-0": {
