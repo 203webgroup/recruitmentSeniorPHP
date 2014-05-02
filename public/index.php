@@ -33,5 +33,17 @@ $app->get(
         );
     }
 );
+$app->get(
+    '/user/{username}/update_password/{newPassword}',
+    function ($username, $newPassword, Application $app) {
+        return $app['user.controller']->updatePassword($username, $newPassword);
+    }
+);
+$app->get(
+    'user/{username}/update_username/{newUsername}',
+    function ($username, $newUsername, Application $app) {
+        return $app['user.controller']->updateUsername($username, $newUsername);
+    }
+);
 
 $app->run();

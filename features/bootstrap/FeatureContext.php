@@ -109,4 +109,71 @@ class FeatureContext extends BehatContext
     {
         $this->sendRequest(sprintf('user/check_username/%s', $this->username));
     }
+
+    /**
+     * @Given /^a user named \'([^\']*)\'$/
+     */
+    public function aUserNamed($username)
+    {
+        $this->aUsername($username);
+    }
+
+    /**
+     * @Given /^a new password \'([^\']*)\' that satisfies our Password Specification$/
+     */
+    public function aNewPasswordThatSatisfiesOurPasswordSpecification($password)
+    {
+        $this->aPassword($password);
+        $this->iCheckIfItSatisfiesOurPasswordSpecification();
+        assertEquals(
+            'Valid password',
+            (string) $this->response->json()
+        );
+    }
+
+    /**
+     * @When /^I change his password credentials for the new one$/
+     */
+    public function iChangeHisPasswordCredentialsForTheNewOne()
+    {
+        $this->sendRequest(
+            sprintf(
+                'user/%s/update_password/%s',
+                $this->username,
+                $this->password
+            )
+        );
+    }
+
+    /**
+     * @Then /^the result should be successfully$/
+     */
+    public function theResultShouldBeSuccessfully()
+    {
+        $response = $this->response->json();
+        assertTrue(empty($response['error_msg']));
+    }
+
+    /**
+     * @Given /^a new username \'([^\']*)\' that satisfies our Username Specification$/
+     */
+    public function aNewUsernameThatSatisfiesOurUsernameSpecification($newUsername)
+    {
+        $this->newUsername = $newUsername;
+        $this->iCheckIfItSatisfiesOurUsernameSpecification($newUsername);
+    }
+
+    /**
+     * @When /^I change his username credentials for the new one$/
+     */
+    public function iChangeHisUsernameCredentialsForTheNewOne()
+    {
+        $this->sendRequest(
+            sprintf(
+                'user/%s/update_username/%s',
+                $this->username,
+                $this->newUsername
+            )
+        );
+    }
 }
