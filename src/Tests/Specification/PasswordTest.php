@@ -5,7 +5,7 @@ namespace Tests\Specification;
 use Tests\TestCase;
 use Specification\Password as PasswordSpecification;
 
-class PasswordCheckerTest extends TestCase
+class PasswordTest extends TestCase
 {
     public function setUp()
     {
@@ -18,7 +18,7 @@ class PasswordCheckerTest extends TestCase
     }
 
     /**
-     * @expectedException Specification\Assertion\Exception\MinLength
+     * @expectedException Specification\Exception\InvalidPassword
      * @expectedExceptionMessage Minimal length
      */
     public function testInvalidPasswordByMinLength()
@@ -27,7 +27,7 @@ class PasswordCheckerTest extends TestCase
     }
 
     /**
-     * @expectedException Specification\Assertion\Exception\AnySpecialCharacter
+     * @expectedException Specification\Exception\InvalidPassword
      * @expectedExceptionMessage Special characters missing
      */
     public function testInvalidPasswordBySpecialCharsMissing()
@@ -36,7 +36,7 @@ class PasswordCheckerTest extends TestCase
     }
 
     /**
-     * @expectedException Specification\Assertion\Exception\AnyUpperCase
+     * @expectedException Specification\Exception\InvalidPassword
      * @expectedExceptionMessage Upper case characters missing
      */
     public function testInvalidPasswordByUpperCaseCharMissing()
@@ -45,7 +45,7 @@ class PasswordCheckerTest extends TestCase
     }
 
     /**
-     * @expectedException Specification\Assertion\Exception\AnyDigit
+     * @expectedException Specification\Exception\InvalidPassword
      * @expectedExceptionMessage Digit characters missing
      */
     public function testInvalidPasswordByDigitCharMissing()

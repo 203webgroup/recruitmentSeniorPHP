@@ -9,7 +9,7 @@ class UsernameCheckerTest extends TestCase
 {
     public function setUp()
     {
-        $this->sut = new UsernameSpecification();
+        $this->sut = new UsernameSpecification($minLength = 6);
     }
 
     public function tearDown()
@@ -18,25 +18,25 @@ class UsernameCheckerTest extends TestCase
     }
 
     /**
-     * @expectedException Specification\Assertion\Exception\MinLength
+     * @expectedException Specification\Exception\InvalidUsername
      * @expectedExceptionMessage Minimal length
      */
     public function testInvalidUsernameByMinLength()
     {
-        $this->sut->check('usern', 6);
+        $this->sut->check('usern');
     }
 
     /**
-     * @expectedException Specification\Assertion\Exception\SomeSpecialCharacter
+     * @expectedException Specification\Exception\InvalidUsername
      * @expectedExceptionMessage Avoid special characters
      */
     public function testInvalidUsernameBySpecialChars()
     {
-        $this->sut->check('usern@me', 6);
+        $this->sut->check('usern@me');
     }
 
     public function testValidUsername()
     {
-        $this->assertTrue($this->sut->check('Username3', 6));
+        $this->assertTrue($this->sut->check('Username3'));
     }
 }

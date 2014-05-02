@@ -2,6 +2,8 @@
 
 namespace Specification\Assertion\Exception;
 
-abstract class Assertion extends \DomainException
+use Specification\Exception\Exception as SpecificationException;
+
+abstract class Assertion extends SpecificationException
 {
 }
