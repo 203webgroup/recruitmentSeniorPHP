@@ -14,7 +14,7 @@ class Repository extends BaseRepository
         return $credential;
     }
 
-    public function persist(Credential $c)
+    public function persist(Credential $cred)
     {
         return true;
     }

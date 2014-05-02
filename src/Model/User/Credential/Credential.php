@@ -2,13 +2,21 @@
 
 namespace Model\User\Credential;
 
+use Specification\Username as UsernameSpecification;
+
 class Credential
 {
     private $username;
     private $password;
 
+    public function __construct(UsernameSpecification $usernameSpec)
+    {
+        $this->usernameSpec = $usernameSpec;
+    }
+
     public function setUsername($username)
     {
+        $this->usernameSpec->check($username);
         $this->username = $username;
 
         return $this;

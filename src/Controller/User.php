@@ -31,10 +31,10 @@ class User
 
     public function checkUsername($username, $minLength)
     {
-        $checker = new \Specification\Username();
+        $checker = new \Specification\Username($minLength);
 
         try {
-            $checker->check($username, $minLength);
+            $checker->check($username);
         } catch (\DomainException $e) {
             $error = [
                 'error_msg' => sprintf('Error: %s', $e->getMessage())
