@@ -17,7 +17,32 @@ class FeatureContext extends BehatContext
 
     public function __construct($config)
     {
+        $this->configFile = __DIR__ . $config['config_file'];
         $this->client = new Client($config['base_url']);
+        $this->config = null;
+    }
+
+    private function getAppConfig()
+    {
+        if (is_null($this->config)) {
+            $config = json_decode(file_get_contents($this->configFile), true);
+        }
+
+        return $config;
+    }
+
+    private function writeAppConfig(array $config)
+    {
+        $this->config = $config;
+        file_put_contents($this->configFile, json_encode($config, JSON_PRETTY_PRINT));
+
+        return $this;
+    }
+
+    private function sendRequest($uri)
+    {
+        $this->request = $this->client->get($uri);
+        $this->response = $this->request->send();
     }
 
     /**
@@ -25,7 +50,9 @@ class FeatureContext extends BehatContext
      */
     public function aMinimalLengthForPasswordOfCharacters($passwordMinLength)
     {
-        $this->passwordMinLength = $passwordMinLength;
+        $config = $this->getAppConfig();
+        $config['specifications']['password']['min_length'] = $passwordMinLength;
+        $this->writeAppConfig($config);
     }
 
     /**
@@ -41,9 +68,7 @@ class FeatureContext extends BehatContext
      */
     public function iCheckIfItSatisfiesOurPasswordSpecification()
     {
-        $checkerUrl = sprintf('check_password/%s/%d', $this->password, $this->passwordMinLength);
-        $this->request = $this->client->get($checkerUrl);
-        $this->response = $this->request->send();
+        $this->sendRequest(sprintf('user/check_password/%s', $this->password));
     }
 
     /**
@@ -64,7 +89,9 @@ class FeatureContext extends BehatContext
      */
     public function aMinimalLengthForUsernameOfCharacters($usernameMinLength)
     {
-        $this->usernameMinLength = $usernameMinLength;
+        $config = $this->getAppConfig();
+        $config['specifications']['username']['min_length'] = $usernameMinLength;
+        $this->writeAppConfig($config);
     }
 
     /**
@@ -80,8 +107,6 @@ class FeatureContext extends BehatContext
      */
     public function iCheckIfItSatisfiesOurUsernameSpecification()
     {
-        $checkerUrl = sprintf('check_username/%s/%d', $this->username, $this->usernameMinLength);
-        $this->request = $this->client->get($checkerUrl);
-        $this->response = $this->request->send();
+        $this->sendRequest(sprintf('user/check_username/%s', $this->username));
     }
 }

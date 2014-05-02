@@ -4,39 +4,34 @@ require __DIR__ . '/../vendor/autoload.php';
 
 use Silex\Application;
 
-$app['debug'] = true;
-
 $app = new Application();
 
-$app->get('/check_password/{password}/{minLength}', function($password, $minLength, Application $app) {
-    $checker = new Specification\Password();
+$configFile = __DIR__ . '/../config/config.json';
+$app['config'] = json_decode(file_get_contents($configFile), true);
 
-    try {
-        $checker->check($password, $minLength);
-    } catch (DomainException $e) {
-        $error = [
-            'error_msg' => sprintf('Error: %s', $e->getMessage())
-        ];
-        return $app->json($error);
+$app['user.controller'] = $app->share(
+    function () {
+        return new Controller\User();
     }
+);
 
-    return $app->json('Valid password');
-});
-
-
-$app->get('/check_username/{username}/{minLength}', function($username, $minLength, Application $app) {
-    $checker = new Specification\Username();
-
-    try {
-        $checker->check($username, $minLength);
-    } catch (DomainException $e) {
-        $error = [
-            'error_msg' => sprintf('Error: %s', $e->getMessage())
-        ];
-        return $app->json($error);
+$app->get(
+    '/user/check_password/{password}',
+    function ($password, Application $app) {
+        return $app['user.controller']->checkPassword(
+            $password,
+            $app['config']['specifications']['password']['min_length']
+        );
     }
-
-    return $app->json('Valid password');
-});
+);
+$app->get(
+    '/user/check_username/{username}',
+    function ($username, Application $app) {
+        return $app['user.controller']->checkUsername(
+            $username,
+            $app['config']['specifications']['username']['min_length']
+        );
+    }
+);
 
 $app->run();

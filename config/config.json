@@ -1,0 +1,10 @@
+{
+    "specifications": {
+        "password": {
+            "min_length": "6"
+        },
+        "username": {
+            "min_length": "6"
+        }
+    }
+}
