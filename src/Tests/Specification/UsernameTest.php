@@ -4,16 +4,30 @@ namespace Tests\Specification;
 
 use Tests\TestCase;
 use Specification\Username as UsernameSpecification;
+use DependencyInjection\Container as Dic;
 
 class UsernameCheckerTest extends TestCase
 {
     public function setUp()
     {
-        $this->sut = new UsernameSpecification($minLength = 6);
+        $this->setUpDic();
+        Dic::set(
+            'config',
+            [
+                'specifications' => [
+                    'username' => [
+                        'min_length' => 6
+                    ]
+                ]
+            ]
+        );
+
+        $this->sut = new UsernameSpecification();
     }
 
     public function tearDown()
     {
+        $this->tearDownDic();
         unset($this->sut);
     }
 

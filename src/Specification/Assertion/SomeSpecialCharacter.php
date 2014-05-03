@@ -4,14 +4,12 @@ namespace Specification\Assertion;
 
 use Specification\Assertion\Exception\AnySpecialCharacter as AnySpecialCharacterException;
 
-class SomeSpecialCharacter implements Assertion
+class SomeSpecialCharacter extends Template
 {
-    public function check($target)
+    protected function doCheck($target)
     {
         if (!preg_match('#@#', $target)) {
             throw new AnySpecialCharacterException();
         }
-
-        return $this;
     }
 }

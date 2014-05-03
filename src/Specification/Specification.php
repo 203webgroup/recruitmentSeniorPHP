@@ -18,6 +18,4 @@ abstract class Specification
 
         return $this;
     }
-
-    abstract public function check($target);
 }

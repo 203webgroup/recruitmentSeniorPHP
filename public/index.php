@@ -3,8 +3,10 @@
 require __DIR__ . '/../vendor/autoload.php';
 
 use Silex\Application;
+use DependencyInjection\Container;
 
 $app = new Application();
+Container::setRealContainer($app);
 
 $configFile = __DIR__ . '/../config/config.json';
 $dataFile = __DIR__ . '/../data/data.json';
@@ -26,19 +28,13 @@ $app['user.controller'] = $app->share(
 $app->get(
     '/user/check_password/{password}',
     function ($password, Application $app) {
-        return $app['user.controller']->checkPassword(
-            $password,
-            $app['config']['specifications']['password']['min_length']
-        );
+        return $app['user.controller']->checkPassword($password);
     }
 );
 $app->get(
     '/user/check_username/{username}',
     function ($username, Application $app) {
-        return $app['user.controller']->checkUsername(
-            $username,
-            $app['config']['specifications']['username']['min_length']
-        );
+        return $app['user.controller']->checkUsername($username);
     }
 );
 $app->get(
@@ -48,9 +44,9 @@ $app->get(
     }
 );
 $app->get(
-    'user/{username}/update_username/{newUsername}',
-    function ($username, $newUsername, Application $app) {
-        return $app['user.controller']->updateUsername($username, $newUsername);
+    'user/{username}/update_username/{newUsername}/{newUsernameConfimation}',
+    function ($username, $newUsername, $newUsernameConfimation, Application $app) {
+        return $app['user.controller']->updateUsername($username, $newUsername, $newUsernameConfimation);
     }
 );
 
