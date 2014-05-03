@@ -5,15 +5,13 @@ namespace Specification\Assertion;
 use Specification\Assertion\Exception\SomeSpecialCharacter as SomeSpecialCharacterException;
 use Specification\Assertion\Exception\AnySpecialCharacter as AnySpecialCharacterException;
 
-class AnySpecialCharacter implements Assertion
+class AnySpecialCharacter extends Template
 {
-    public function check($target)
+    protected function doCheck($target)
     {
         if ($this->hasSomeSpecialCharacter($target)) {
             throw new SomeSpecialCharacterException();
         }
-
-        return true;
     }
 
     private function hasSomeSpecialCharacter($target)

@@ -4,14 +4,12 @@ namespace Specification\Assertion;
 
 use Specification\Assertion\Exception\AnyUpperCase as AnyUpperCaseException;
 
-class SomeUpperCase implements Assertion
+class SomeUpperCase extends Template
 {
-    public function check($target)
+    protected function doCheck($target)
     {
         if (!preg_match('#[A-Z]+#', $target)) {
             throw new AnyUpperCaseException();
         }
-
-        return $this;
     }
 }

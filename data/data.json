@@ -1,4 +1,21 @@
 {
+    "specifications": {
+        "password": {
+            "min_length": 6
+        },
+        "username": {
+            "min_length": 5
+        }
+    },
+    "data": {
+        "credentials": [
+
+        ]
+    },
     "credentials": [
+        {
+            "username": "duplicateUsername",
+            "password": "some_password"
+        }
     ]
 }

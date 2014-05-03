@@ -4,6 +4,9 @@ namespace Controller;
 
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Specification\Password as PasswordSpecification;
+use Specification\Exception\InvalidPassword as InvalidPasswordException;
+use Specification\Username as UsernameSpecification;
+use Specification\Exception\InvalidUsername as InvalidUsernameException;
 use Model\User\Credential\Repository as CredentialRepository;
 
 class User
@@ -13,53 +16,76 @@ class User
         $this->credentialsRepo = $credentialsRepo;
     }
 
-    public function checkPassword($password, $minLength)
+    public function checkPassword($password)
     {
-        $pwdSpec = new \Specification\Password();
+        $pwdSpec = new PasswordSpecification();
 
         try {
-            $pwdSpec->check($password, $minLength);
-        } catch (\DomainException $e) {
-            $error = [
-                'error_msg' => sprintf('Error: %s', $e->getMessage())
-            ];
-            return new JsonResponse($error);
+            $pwdSpec->check($password);
+        } catch (InvalidPasswordException $ipe) {
+            return $this->errorMessage($ipe->getMessage());
         }
 
         return new JsonResponse('Valid password');
     }
 
-    public function checkUsername($username, $minLength)
+    public function checkUsername($username)
     {
-        $checker = new \Specification\Username($minLength);
-
         try {
-            $checker->check($username);
-        } catch (\DomainException $e) {
-            $error = [
-                'error_msg' => sprintf('Error: %s', $e->getMessage())
-            ];
-            return new JsonResponse($error);
+            $this->checkIfValidUsername($username);
+        } catch (InvalidUsernameException $e) {
+            return $this->errorMessage($e->getMessage());
         }
 
         return new JsonResponse('Valid password');
+    }
+
+    private function checkIfValidUsername($username)
+    {
+        $spec = new UsernameSpecification();
+        $spec->check($username);
     }
 
     public function updatePassword($username, $newPassword)
     {
         $credential = $this->credentialsRepo->getByUsername($username);
+        if (!$credential) {
+            return $this->errorMessage('User not found');
+        }
+
         $credential->setPassword($newPassword);
         $this->credentialsRepo->persist($credential);
 
         return new JsonResponse('Password was changed successfully');
     }
 
-    public function updateUsername($username, $newUsername)
+    public function updateUsername($username, $newUsername, $newUsernameConfimation)
     {
+        if ($newUsername !== $newUsernameConfimation) {
+            return $this->errorMessage('username mismatch');
+        }
+        try {
+            $this->checkIfValidUsername($newUsername);
+        } catch (InvalidUsernameException $iue) {
+            return $this->errorMessage($iue->getMessage());
+        }
+
+        if ($this->credentialsRepo->getByUsername($newUsername)) {
+            return $this->errorMessage('not unique');
+        }
+
         $credential = $this->credentialsRepo->getByUsername($username);
         $credential->setUsername($newUsername);
         $this->credentialsRepo->persist($credential);
 
         return new JsonResponse('Username was changed successfully');
+    }
+
+    private function errorMessage($errorMessage)
+    {
+        $error = [
+            'error_msg' => sprintf('Error: %s', $errorMessage)
+        ];
+        return new JsonResponse($error);
     }
 }

@@ -13,31 +13,83 @@ require_once __DIR__ . '/../../vendor/phpunit/phpunit/src/Framework/Assert/Funct
 
 class FeatureContext extends BehatContext
 {
-    private $assertSession;
+    private $config = null;
+    private $basePath = __DIR__;
+
+    private static $dataFilePath;
+    private static $data;
 
     public function __construct($config)
     {
-        $this->configFile = __DIR__ . $config['config_file'];
         $this->client = new Client($config['base_url']);
-        $this->config = null;
+        $this->configFile = __DIR__ . $config['config_file'];
+        static::$dataFilePath = __DIR__ . $config['data_file'];
+    }
+
+    /**
+     * @BeforeSuite
+     */
+    public static function initializeData()
+    {
+        $data = [
+            'specifications' => [
+                'password' => [
+                    'min_length' => rand(3, 6)
+                ],
+                'username' => [
+                    'min_length' => rand(3, 6)
+                ]
+            ],
+            'data' => [
+                'credentials' => []
+            ]
+        ];
+        static::writeAppData($data);
     }
 
     private function getAppConfig()
     {
         if (is_null($this->config)) {
-            $config = json_decode(file_get_contents($this->configFile), true);
+            $this->config = static::readJsonFile($this->configFile);
         }
 
-        return $config;
+        return $this->config;
     }
+
 
     private function writeAppConfig(array $config)
     {
         $this->config = $config;
-        file_put_contents($this->configFile, json_encode($config, JSON_PRETTY_PRINT));
+        static::writeJsonFile($this->configFile, $config);
 
         return $this;
     }
+
+    private function getAppData()
+    {
+        if (is_null(static::$data)) {
+            static::$data = static::readJsonFile(static::$dataFilePath);
+        }
+
+        return static::$data;
+    }
+
+    private static function writeAppData($data)
+    {
+        static::$data = $data;
+        static::writeJsonFile(static::$dataFilePath, $data);
+    }
+
+    private function readJsonFile($filePath)
+    {
+        return json_decode(file_get_contents($filePath), true);
+    }
+
+    private static function writeJsonFile($filePath, $content)
+    {
+        file_put_contents($filePath, json_encode($content, JSON_PRETTY_PRINT));
+    }
+
 
     private function sendRequest($uri)
     {
@@ -58,7 +110,7 @@ class FeatureContext extends BehatContext
     /**
      * @Given /^a password \'([^\']*)\'$/
      */
-    public function aPassword($password)
+    public function setPassword($password)
     {
         $this->password = $password;
     }
@@ -66,7 +118,7 @@ class FeatureContext extends BehatContext
     /**
      * @When /^I check if it satisfies our Password Specification$/
      */
-    public function iCheckIfItSatisfiesOurPasswordSpecification()
+    public function checkIfSatisfiesOurPasswordSpecification()
     {
         $this->sendRequest(sprintf('user/check_password/%s', $this->password));
     }
@@ -105,9 +157,13 @@ class FeatureContext extends BehatContext
     /**
      * @When /^I check if it satisfies our Username Specification$/
      */
-    public function iCheckIfItSatisfiesOurUsernameSpecification()
+    public function checkIfSatisfiesOurUsernameSpecification($username = null)
     {
-        $this->sendRequest(sprintf('user/check_username/%s', $this->username));
+        if (is_null($username)) {
+            $username = $this->username;
+        }
+
+        $this->sendRequest(sprintf('user/check_username/%s', $username));
     }
 
     /**
@@ -115,16 +171,22 @@ class FeatureContext extends BehatContext
      */
     public function aUserNamed($username)
     {
-        $this->aUsername($username);
+        $this->username = $username;
+        $data = $this->getAppData();
+        $data['credentials'][] = [
+            'username' => $username,
+            'password' => 'aPasw@rd'
+        ];
+        static::writeAppData($data);
     }
 
     /**
      * @Given /^a new password \'([^\']*)\' that satisfies our Password Specification$/
      */
-    public function aNewPasswordThatSatisfiesOurPasswordSpecification($password)
+    public function aNewPasswordThatSatisfiesOurPasswordSpecification($newPassword)
     {
-        $this->aPassword($password);
-        $this->iCheckIfItSatisfiesOurPasswordSpecification();
+        $this->setPassword($newPassword);
+        $this->checkIfSatisfiesOurPasswordSpecification();
         assertEquals(
             'Valid password',
             (string) $this->response->json()
@@ -160,7 +222,7 @@ class FeatureContext extends BehatContext
     public function aNewUsernameThatSatisfiesOurUsernameSpecification($newUsername)
     {
         $this->newUsername = $newUsername;
-        $this->iCheckIfItSatisfiesOurUsernameSpecification($newUsername);
+        $this->checkIfSatisfiesOurUsernameSpecification($newUsername);
     }
 
     /**
@@ -168,12 +230,74 @@ class FeatureContext extends BehatContext
      */
     public function iChangeHisUsernameCredentialsForTheNewOne()
     {
+        $this->updateUsername($this->username, $this->newUsername);
+    }
+
+    private function updateUsername($username, $newUsername, $newUsernameConfirmation = null)
+    {
+        if (is_null($newUsernameConfirmation)) {
+            $newUsernameConfirmation = $newUsername;
+        }
+
         $this->sendRequest(
             sprintf(
-                'user/%s/update_username/%s',
-                $this->username,
-                $this->newUsername
+                'user/%s/update_username/%s/%s',
+                $username,
+                $newUsername,
+                $newUsernameConfirmation
             )
+        );
+    }
+
+    /**
+     * @Given /^exists a user named \'([^\']*)\' in the User Collection$/
+     */
+    public function existsAUserNamedInTheUserCollection($existingUsername)
+    {
+        $data = $this->getAppData();
+        $data['credentials'] = [
+            [
+                'username' => $existingUsername,
+                'password' => 'some_password'
+            ]
+        ];
+        static::writeAppData($data);
+    }
+
+    /**
+     * @Given /^a username \'([^\']*)\' and its username confirmation \'([^\']*)\'$/
+     */
+    public function aUsernameAndItsUsernameConfirmation($newUsername, $newUsernameConfirmation)
+    {
+        $this->newUsername = $newUsername;
+        $this->newUsernameConfirmation = $newUsernameConfirmation;
+    }
+
+    /**
+     * @When /^I check if it satisfies our Change Username Specification$/
+     */
+    public function iCheckIfItSatisfiesOurChangeUsernameSpecification()
+    {
+        $this->updateUsername(
+            $this->username,
+            $this->newUsername,
+            $this->newUsernameConfirmation
+        );
+    }
+
+    /**
+     * @Given /^the username \'([^\']*)\' does not satisfy Username Specification$/
+     */
+    public function theUsernameDoesNotSatisfyUsernameSpecification($wrongUsername)
+    {
+        $this->checkIfSatisfiesOurUsernameSpecification($wrongUsername);
+        $this->hasSomeError();
+    }
+
+    private function hasSomeError()
+    {
+        assertFalse(
+            empty($this->response->json()['error_msg'])
         );
     }
 }

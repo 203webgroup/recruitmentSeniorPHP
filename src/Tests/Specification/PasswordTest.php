@@ -4,16 +4,29 @@ namespace Tests\Specification;
 
 use Tests\TestCase;
 use Specification\Password as PasswordSpecification;
+use DependencyInjection\Container as Dic;
 
 class PasswordTest extends TestCase
 {
     public function setUp()
     {
+        $this->setUpDic();
+        Dic::set(
+            'config',
+            [
+                'specifications' => [
+                    'password' => [
+                        'min_length' => 6
+                    ]
+                ]
+            ]
+        );
         $this->sut = new PasswordSpecification();
     }
 
     public function tearDown()
     {
+        $this->tearDownDic();
         unset($this->sut);
     }
 
@@ -23,7 +36,7 @@ class PasswordTest extends TestCase
      */
     public function testInvalidPasswordByMinLength()
     {
-        $this->sut->check('n3wP@', 6);
+        $this->sut->check('n3wP@');
     }
 
     /**
@@ -32,7 +45,7 @@ class PasswordTest extends TestCase
      */
     public function testInvalidPasswordBySpecialCharsMissing()
     {
-        $this->sut->check('newPassword2', 6);
+        $this->sut->check('newPassword2');
     }
 
     /**
@@ -41,7 +54,7 @@ class PasswordTest extends TestCase
      */
     public function testInvalidPasswordByUpperCaseCharMissing()
     {
-        $this->sut->check('n3wp@ssw0rd', 6);
+        $this->sut->check('n3wp@ssw0rd');
     }
 
     /**
@@ -50,11 +63,11 @@ class PasswordTest extends TestCase
      */
     public function testInvalidPasswordByDigitCharMissing()
     {
-        $this->sut->check('newP@ssword', 6);
+        $this->sut->check('newP@ssword');
     }
 
     public function testValidPassword()
     {
-        $this->assertTrue($this->sut->check('@PassWord3', 6));
+        $this->assertTrue($this->sut->check('@PassWord3'));
     }
 }

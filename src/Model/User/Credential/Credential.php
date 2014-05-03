@@ -9,8 +9,11 @@ class Credential
     private $username;
     private $password;
 
-    public function __construct(UsernameSpecification $usernameSpec)
+    public function __construct(UsernameSpecification $usernameSpec = null)
     {
+        if (is_null($usernameSpec)) {
+            $usernameSpec = new UsernameSpecification();
+        }
         $this->usernameSpec = $usernameSpec;
     }
 

@@ -4,11 +4,13 @@ namespace Specification;
 
 use Specification\Assertion\Exception\Assertion as AssertionException;
 use Specification\Exception\InvalidPassword;
+use DependencyInjection\Container;
 
 class Password extends Specification
 {
-    public function check($password, $minLength)
+    public function check($password)
     {
+        $minLength = $this->getMinLength();
         try {
             $this->assert('MinLength', [$password, $minLength])
                 ->assert('SomeSpecialCharacter', $password)
@@ -19,5 +21,11 @@ class Password extends Specification
         }
 
         return true;
+    }
+
+    private function getMinLength()
+    {
+        // print_r(Container::get('config'));die;
+        return Container::get('config')['specifications']['password']['min_length'];
     }
 }
