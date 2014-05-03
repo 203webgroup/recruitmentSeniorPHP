@@ -7,7 +7,7 @@
          convertNoticesToExceptions="true"
          convertWarningsToExceptions="true"
          processIsolation="false"
-         stopOnFailure="false"
+         stopOnFailure="true"
          syntaxCheck="false"
          bootstrap="vendor/autoload.php"
         >
@@ -18,17 +18,33 @@
     </php>
 
     <testsuites>
+        <testsuite name="All tests">
+            <directory>./src/Tests/</directory>
+        </testsuite>
         <testsuite name="Tnt Test Suite">
             <directory>./src/Tnt/Tests/</directory>
+        </testsuite>
+        <testsuite name="Characterization">
+            <directory>src/Legacy/Tests</directory>
         </testsuite>
     </testsuites>
 
     <filter>
         <whitelist>
-            <directory>./src/Tnt/</directory>
+            <directory>./src</directory>
             <exclude>
-                <directory>./src/Tnt/*/Tests</directory>
+                <directory>./src/Tests</directory>
+                <directory>./src/*/Tests</directory>
             </exclude>
         </whitelist>
     </filter>
+    <logging>
+        <log type="coverage-html" target="./log/coverage/html" charset="UTF-8"
+            yui="true" highlight="true"
+            lowUpperBound="50"
+            highLowerBound="80"
+            showUncoveredFile="true"
+            />
+        <log type="testdox-html" target="./log/coverage/testdox.html" />
+    </logging>
 </phpunit>

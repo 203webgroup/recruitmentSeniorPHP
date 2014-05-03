@@ -1,0 +1,7 @@
+default:
+  context:
+    parameters:
+      bootstrap: vendor/autoload.php
+      base_url: http://localhost/
+      config_file: /../../config/config.json
+      data_file: '/../../data./data.json'

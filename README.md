@@ -45,18 +45,53 @@ Questions
 Tip: try to keep it short
 
 * What is an index in a sql database?
+Is an ordered list based in one or more fields from one table used for lookups
 
 * If you have to create an API, which data format would you choose and why?
+JSON, for its simplicity and easy to parse in almost all programing languages
 
 * If you are to save passwords, how do you do? Why?
+Encripted, to avoid to anyone(included develepers, sysadmins, etc.) to be able to read it.
 
 * Describe the architecture you would use to create a system where as much as possible of the code is decoupled from the framework.
+In much cases depends of the framework's arquitecture (i.e: Cake uses inheritance for do almost all), but generally, the better approach is use some Dependency Injection mechanism and this dependecies must be over interfaces instead of implementations.
 
 * What is a no sql database?
+In general, is a schema  free database or at least a weak one.
+Some types are: column, document, graph and key/value.
 
 * What type of code constructs makes unit testing difficult or impossible?
+The more common problem is with the static ones
 
 * Explain dependency injection.
+Basically, if one object's method needs to use some other object, you pass this dependency to this method.
 
 * What is a mock? How do you use it?
+A mock is double for test porpouses.
 
+For example:
+
+class A
+{
+    public function __construct(B $b)
+    {
+        $this->b = ;
+    }
+
+    public function foo()
+    {
+        $this->b->bar();
+        // do stuff
+    }
+}
+
+class B
+{
+    public function bar()
+    {
+        // do stuff
+    }
+}
+
+In this case we can't write a unit test for A::foo method (always we are testing B::bar too).
+In order to make a unit test for A::foo we need to isolate A from B, this is an example for when a mock is useful.
